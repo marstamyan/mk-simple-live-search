@@ -1,0 +1,7 @@
+.local/
+artifacts/
+node_modules/
+demo/node_modules/
+demo/public/
+demo/output/
+*.log

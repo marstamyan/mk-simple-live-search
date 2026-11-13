@@ -1,0 +1,74 @@
+[
+  {
+    "id": "01",
+    "title": "Activate the plugin",
+    "action": "Plugins → Add Plugin → Upload Plugin",
+    "code": "mk-simple-live-search-1.1.0.zip",
+    "result": "The plugin must be active before you add a search field.",
+    "voice": "First, upload the plugin ZIP from Plugins, Add Plugin, Upload Plugin. After installation, activate MK Simple Live Search. An active plugin shows a Deactivate link, as highlighted here."
+  },
+  {
+    "id": "02",
+    "title": "Add the search field",
+    "action": "Add a Shortcode block. Paste this line and save.",
+    "code": "[mk_simple_live_search]",
+    "result": "The shortcode becomes a search field on the published page.",
+    "voice": "Edit your page and add a Shortcode block. Paste this exact shortcode into the block, then save the page. Do not paste it into a Code block. Now open the published page."
+  },
+  {
+    "id": "03",
+    "title": "Try the default search",
+    "action": "Type coffee in the published search field.",
+    "code": "[mk_simple_live_search]",
+    "result": "Search starts at 3 characters. Click a result to open the post.",
+    "voice": "Type coffee. Four matching posts appear. Click a result to open the actual article. By default, the search includes titles and content of published posts and pages. A query needs at least three characters."
+  },
+  {
+    "id": "04",
+    "title": "Search titles only",
+    "action": "Add search_in=\"title\" to the shortcode.",
+    "code": "[mk_simple_live_search search_in=\"title\"]",
+    "result": "Three titles contain Coffee. Body-only matches are excluded.",
+    "voice": "To search only titles, add the search in title option to the shortcode. Save the page and enter the same query. These three posts contain Coffee in their titles. A match only in the body is excluded."
+  },
+  {
+    "id": "05",
+    "title": "Search content only",
+    "action": "Change title to content, then save the page.",
+    "code": "[mk_simple_live_search search_in=\"content\"]",
+    "result": "Homemade drinks contains coffee in its body, not its title.",
+    "voice": "Change the option to content to search the body instead. With the same query, Homemade drinks is returned because coffee appears inside the article. The three title-only matches are now excluded. This is the difference between the two modes."
+  },
+  {
+    "id": "06",
+    "title": "Limit the number of results",
+    "action": "Set posts_per_page to the maximum you want to show.",
+    "code": "[mk_simple_live_search posts_per_page=\"2\"]",
+    "result": "Only two results appear, even when more posts match.",
+    "voice": "Use posts per page to limit the dropdown. Here the value is two. Several posts match coffee, but only two are displayed. The default is ten results, and the supported range is one to twenty."
+  },
+  {
+    "id": "07",
+    "title": "Search a custom post type",
+    "action": "Use the registered post type slug, such as portfolio.",
+    "code": "[mk_simple_live_search post_type=\"portfolio\"]",
+    "result": "Only the portfolio project appears. Ordinary posts are excluded.",
+    "voice": "To search portfolio projects, set post type to portfolio. Use the actual type slug registered by your theme or another plugin. This plugin does not create that type. Here only the matching portfolio project is returned, not ordinary posts."
+  },
+  {
+    "id": "08",
+    "title": "Use more than one field",
+    "action": "Add two Shortcode blocks with different settings.",
+    "code": "One field: title • Another field: content",
+    "result": "Each field keeps its own query and search mode.",
+    "voice": "You can add multiple Shortcode blocks to one page. In this example, the first field searches titles and the second searches content. Each keeps its own query and settings. Focusing the second field closes the first dropdown without clearing its input."
+  },
+  {
+    "id": "09",
+    "title": "Keyboard and empty results",
+    "action": "Arrow Down → Enter to open. Escape to close.",
+    "code": "No matching posts → Nothing found",
+    "result": "Only published, public content without a password is searched.",
+    "voice": "Arrow Down focuses a result. Enter opens it. Escape closes the dropdown. A query with no matches shows Nothing found. Drafts, private posts, and password protected posts are excluded."
+  }
+]

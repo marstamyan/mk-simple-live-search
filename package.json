@@ -1,0 +1,12 @@
+{
+  "name": "mk-simple-live-search",
+  "version": "1.1.0",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/frontend.test.cjs",
+    "test:browser": "node tests/browser.e2e.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}

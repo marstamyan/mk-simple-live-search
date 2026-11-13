@@ -1,87 +1,178 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const inputField = document.getElementById("mk-simple-live-search-input")
-  const resultsContainer = document.getElementById(
-    "mk-simple-live-search-results",
-  )
+(function () {
+  "use strict";
 
-  if (!inputField || !resultsContainer) return
+  const config = window.mkSimpleLiveSearch;
+  if (!config || !config.ajax_url) return;
 
-  let debounceTimer
+  const strings = Object.assign({
+    loading: "Searching…",
+    noResults: "Nothing found.",
+    error: "Search is unavailable. Please try again.",
+    resultCount: "%d results found.",
+    untitled: "(Untitled)",
+  }, config.strings || {});
 
-  inputField.addEventListener("input", () => {
-    const searchQuery = inputField.value.trim()
+  function initialize() {
+    document.querySelectorAll(".mk-simple-live-search").forEach((root) => {
+      if (root.dataset.mkSearchInitialized) return;
 
-    if (searchQuery.length < 3) {
-      resultsContainer.innerHTML = ""
-      resultsContainer.classList.remove("active")
-      return
-    }
+      const input = root.querySelector(".mk-simple-live-search-input");
+      const results = root.querySelector(".mk-simple-live-search-results");
+      const status = root.querySelector(".mk-simple-live-search-status");
+      if (!input || !results || !status) return;
+      root.dataset.mkSearchInitialized = "true";
+      const hint = status.textContent;
 
-    const postsPerPage =
-      parseInt(inputField.getAttribute("data-posts-per-page"), 10) || 10
-    const searchIn = inputField.getAttribute("data-search-in") || "both"
-    const postType = inputField.getAttribute("data-post-type") || "post,page"
+      let timer;
+      let controller;
+      let sequence = 0;
+      let composing = false;
 
-    clearTimeout(debounceTimer)
-    debounceTimer = setTimeout(() => {
-      const url = `${mkSimpleLiveSearch.ajax_url}?query=${encodeURIComponent(
-        searchQuery,
-      )}&posts_per_page=${postsPerPage}&search_in=${searchIn}&post_type=${postType}`
+      function setOpen(open) {
+        results.hidden = !open;
+        results.classList.toggle("active", open);
+      }
 
-      fetch(url, { method: "GET" })
-        .then((response) => response.json())
-        .then((data) => {
-          if (inputField.value.trim().length < 3) {
-            resultsContainer.innerHTML = ""
-            resultsContainer.classList.remove("active")
-            return
-          }
+      function cancelPending() {
+        clearTimeout(timer);
+        sequence += 1;
+        if (controller) controller.abort();
+        controller = null;
+        results.setAttribute("aria-busy", "false");
+      }
 
-          resultsContainer.innerHTML = ""
+      function dismiss() {
+        cancelPending();
+        // A dismissed loading message is not a completed result to reuse on focus.
+        results.replaceChildren();
+        setOpen(false);
+        status.textContent = "";
+      }
 
-          if (!Array.isArray(data) || data.length === 0) {
-            resultsContainer.innerHTML =
-              '<div class="mk-simple-no-results">Nothing found</div>'
-            resultsContainer.classList.add("active")
-            return
-          }
+      function message(text, className) {
+        const element = document.createElement("div");
+        element.className = className;
+        element.textContent = text;
+        results.replaceChildren(element);
+        status.textContent = text;
+        setOpen(true);
+      }
 
-          const resultList = document.createElement("ul")
-          resultList.classList.add("mk-simple-results-list")
+      async function search(query, requestSequence) {
+        controller = new AbortController();
+        results.setAttribute("aria-busy", "true");
+        message(strings.loading, "mk-simple-loading");
 
+        try {
+          const url = new URL(config.ajax_url, window.location.href);
+          url.searchParams.set("query", query);
+          url.searchParams.set("posts_per_page", input.dataset.postsPerPage || "10");
+          url.searchParams.set("search_in", input.dataset.searchIn || "both");
+          url.searchParams.set("post_type", input.dataset.postType || "post,page");
+          const response = await fetch(url.toString(), { signal: controller.signal });
+          if (!response.ok) throw new Error("Search request failed");
+          const data = await response.json();
+          if (requestSequence !== sequence) return;
+          if (!Array.isArray(data)) throw new Error("Invalid search response");
+
+          const list = document.createElement("ul");
+          list.className = "mk-simple-results-list";
           data.forEach((post) => {
-            if (!post.url || !post.title) return
+            if (!post || typeof post.url !== "string" || typeof post.title !== "string") return;
+            let linkUrl;
+            try {
+              linkUrl = new URL(post.url, window.location.href);
+            } catch (error) {
+              return;
+            }
+            if (linkUrl.protocol !== "https:" && linkUrl.protocol !== "http:") return;
 
-            const listItem = document.createElement("li")
-            listItem.classList.add("mk-simple-result-item")
+            const item = document.createElement("li");
+            item.className = "mk-simple-result-item";
+            const link = document.createElement("a");
+            link.className = "mk-simple-result-link";
+            link.href = linkUrl.href;
+            link.textContent = post.title || strings.untitled;
+            item.appendChild(link);
+            list.appendChild(item);
+          });
 
-            const link = document.createElement("a")
-            link.href = post.url
-            link.textContent = post.title
-            link.classList.add("mk-simple-result-link")
+          if (!list.children.length) {
+            message(strings.noResults, "mk-simple-no-results");
+          } else {
+            results.replaceChildren(list);
+            status.textContent = strings.resultCount.replace("%d", String(list.children.length));
+            setOpen(true);
+          }
+        } catch (error) {
+          if (requestSequence !== sequence || error.name === "AbortError") return;
+          message(strings.error, "mk-simple-error");
+        } finally {
+          if (requestSequence === sequence) {
+            controller = null;
+            results.setAttribute("aria-busy", "false");
+          }
+        }
+      }
 
-            listItem.appendChild(link)
-            resultList.appendChild(listItem)
-          })
+      function scheduleSearch() {
+        cancelPending();
+        results.replaceChildren();
+        setOpen(false);
+        status.textContent = "";
+        const query = input.value.trim();
+        if (composing) return;
+        if (Array.from(query).length < 3) {
+          status.textContent = hint;
+          return;
+        }
+        const requestSequence = sequence;
+        timer = setTimeout(() => search(query, requestSequence), 350);
+      }
 
-          resultsContainer.appendChild(resultList)
-          resultsContainer.classList.add("active")
-        })
-        .catch((error) => {
-          console.error("Error:", error)
-          resultsContainer.innerHTML =
-            '<div class="mk-simple-error">Error occurred while searching.</div>'
-          resultsContainer.classList.add("active")
-        })
-    }, 500)
-  })
+      input.addEventListener("input", scheduleSearch);
+      input.addEventListener("compositionstart", () => {
+        composing = true;
+        dismiss();
+      });
+      input.addEventListener("compositionend", () => {
+        composing = false;
+        scheduleSearch();
+      });
+      input.addEventListener("focus", () => {
+        if (results.children.length) setOpen(true);
+        else scheduleSearch();
+      });
 
-  document.addEventListener("click", (event) => {
-    if (
-      !resultsContainer.contains(event.target) &&
-      event.target !== inputField
-    ) {
-      resultsContainer.classList.remove("active")
-    }
-  })
-})
+      root.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          // Focus first: its focus handler may reopen results, then dismiss them.
+          input.focus();
+          dismiss();
+          return;
+        }
+        if (results.hidden || (event.key !== "ArrowDown" && event.key !== "ArrowUp")) return;
+        const links = Array.from(results.querySelectorAll("a"));
+        if (!links.length) return;
+        const current = links.indexOf(document.activeElement);
+        let next = event.key === "ArrowDown" ? current + 1 : current - 1;
+        if (document.activeElement === input) next = event.key === "ArrowDown" ? 0 : links.length - 1;
+        event.preventDefault();
+        if (next < 0 || next >= links.length) input.focus();
+        else links[next].focus();
+      });
+
+      root.addEventListener("focusout", (event) => {
+        if (!root.contains(event.relatedTarget)) dismiss();
+      });
+      document.addEventListener("click", (event) => {
+        if (!root.contains(event.target)) dismiss();
+      });
+      setOpen(false);
+    });
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initialize);
+  else initialize();
+})();

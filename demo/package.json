@@ -1,0 +1,17 @@
+{
+  "name": "mk-simple-live-search-tutorial",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Concise English tutorial from real local WordPress browser footage",
+  "scripts": {
+    "render": "node render.cjs --fast",
+    "capture": "node capture.cjs"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.543",
+    "@remotion/renderer": "4.0.543",
+    "remotion": "4.0.543",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  }
+}

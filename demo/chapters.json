@@ -1,0 +1,38 @@
+[
+  {
+    "id": "01-install",
+    "title": "Install and activate",
+    "subtitle": "Upload the plugin ZIP via Plugins > Add Plugin. Check that it is active.",
+    "durationInFrames": 184
+  },
+  {
+    "id": "02-shortcode",
+    "title": "Add a Shortcode block",
+    "subtitle": "Enter [mk_simple_live_search] in a Shortcode block, then save the page.",
+    "durationInFrames": 166
+  },
+  {
+    "id": "03-live",
+    "title": "Search as you type",
+    "subtitle": "Enter at least 3 characters. Use Arrow Down and Enter to open a result.",
+    "durationInFrames": 219
+  },
+  {
+    "id": "04-modes",
+    "title": "Choose what to search",
+    "subtitle": "search_in=\"title\" searches titles; search_in=\"content\" searches the body.",
+    "durationInFrames": 174
+  },
+  {
+    "id": "05-options",
+    "title": "Set the limit and post type",
+    "subtitle": "posts_per_page=\"2\" limits results. post_type=\"portfolio\" searches an existing public type.",
+    "durationInFrames": 144
+  },
+  {
+    "id": "06-keyboard",
+    "title": "Independent fields and keyboard controls",
+    "subtitle": "Each field keeps its own query. Escape closes results; unmatched queries show \"Nothing found\".",
+    "durationInFrames": 201
+  }
+]
